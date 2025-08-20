@@ -1,110 +1,89 @@
 ﻿using HarmonyLib;
-using RimWorld;
-using Verse.AI.Group;
+using Verse;
 
-[HarmonyPatch(typeof(LordJob_DefendAndExpandHive), "CreateGraph")]
-public static class LordJob_DefendAndExpandHive_CreateGraph_Patch
+namespace SK_Bug_Off
 {
-    public static void Postfix(ref StateGraph __result)
+    public class HarmonyPatches
     {
-        // Find the LordToil_DefendHiveAggressively to use as replacement target
-        LordToil_DefendHiveAggressively defendHiveAggressively = null;
-        foreach (var toil in __result.lordToils)
+
+        [HarmonyPatch(typeof(Thing), "TakeDamage")]
+        public static class Patch_TakeDamage
         {
-            if (toil is LordToil_DefendHiveAggressively)
+            public static void Postfix(Thing __instance, DamageInfo dinfo)
             {
-                defendHiveAggressively = toil as LordToil_DefendHiveAggressively;
-                break;
+                if (__instance is Pawn pawn)
+                {
+                    if (!Utils.IsInsect(pawn) || dinfo.Instigator == null || __instance.Map == null)
+                        return;
+
+                    InsectMemoryMapComp insectMemoryComp = __instance.Map.GetComponent<InsectMemoryMapComp>();
+
+                    if (dinfo.Instigator is Pawn attacker)
+                    {
+                        // Add the attacking pawn as an aggressor
+                        insectMemoryComp.AddOriginalAggressor(pawn, new InsectAggressor(attacker));
+
+                        // Also add their faction if they have one (for faction-wide hostility)
+                        if (attacker.Faction != null)
+                        {
+                            insectMemoryComp.AddOriginalAggressor(pawn, new InsectAggressor(attacker.Faction));
+                        }
+                    }
+                }
             }
         }
 
-        // Find and modify the specific transition that goes to LordToil_AssaultColony
-        foreach (Transition transition in __result.transitions)
+        [HarmonyPatch(typeof(Pawn), "Destroy")]
+        public static class Patch_PawnDestroy
         {
-            if (ShouldModifyTransition(transition))
+            public static void Postfix(Pawn __instance)
             {
-                transition.target = defendHiveAggressively;
-            }
-        }
-    }
+                Map map = Find.CurrentMap;
+                if (map == null)
+                {
+                    return;
+                }
+                InsectMemoryMapComp insectMemoryComp = map.GetComponent<InsectMemoryMapComp>();
 
-    private static bool ShouldModifyTransition(Transition transition)
-    {
-        // Check if target is LordToil_AssaultColony
-        if (transition.target.GetType() != typeof(LordToil_AssaultColony))
-            return false;
-
-        // Check if source contains LordToil_DefendAndExpandHive
-        bool hasDefendAndExpandSource = false;
-        foreach (var source in transition.sources)
-        {
-            if (source.GetType() == typeof(LordToil_DefendAndExpandHive))
-            {
-                hasDefendAndExpandSource = true;
-                break;
-            }
-        }
-        if (!hasDefendAndExpandSource)
-            return false;
-
-        // Check if it has the specific trigger pattern we want to modify
-        // The transition we want to modify has:
-        // - 1 Trigger_PawnHarmed with requireInstigatorWithFaction: true
-        // - 1 Trigger_PawnLostViolently
-        // - 4 Trigger_Memo triggers
-        // - 1 TransitionAction_EndAllJobs post action
-        return HasSpecificTriggerPattern(transition);
-    }
-
-    private static bool HasSpecificTriggerPattern(Transition transition)
-    {
-        // Count trigger types
-        int pawnHarmedCount = 0;
-        int pawnLostViolentlyCount = 0;
-        int memoCount = 0;
-        bool hasPawnHarmedWithInstigatorFaction = false;
-
-        foreach (var trigger in transition.triggers)
-        {
-            if (trigger is Trigger_PawnHarmed)
-            {
-                pawnHarmedCount++;
-                // Check if this is the specific PawnHarmed trigger with requireInstigatorWithFaction: true
-                // We can use reflection to check the field, or just assume if there's only one PawnHarmed trigger
-                // and it's part of a transition with the right pattern, it's the one we want
-                if (pawnHarmedCount == 1) // First (and should be only) PawnHarmed trigger
-                    hasPawnHarmedWithInstigatorFaction = true;
-            }
-            else if (trigger is Trigger_PawnLostViolently)
-            {
-                pawnLostViolentlyCount++;
-            }
-            else if (trigger is Trigger_Memo)
-            {
-                memoCount++;
+                if (Utils.IsInsect(__instance))
+                {
+                    // Clean up the insect itself
+                    insectMemoryComp.CleanupInsect(__instance);
+                }
+                else
+                {
+                    // Instantly clean up this aggressor and check lord duties
+                    insectMemoryComp.CheckAndUpdateLordDuties(__instance);
+                }
             }
         }
 
-        // Check if it has the expected post action
-        bool hasEndAllJobsAction = false;
-        foreach (var action in transition.postActions)
+        [HarmonyPatch(typeof(Pawn), "Kill")]
+        public static class Patch_PawnKill
         {
-            if (action is TransitionAction_EndAllJobs)
+            public static void Postfix(Pawn __instance)
             {
-                hasEndAllJobsAction = true;
-                break;
+                if (__instance.Corpse?.Map != null)
+                {
+                    // Instantly clean up this aggressor and check lord duties
+                    InsectMemoryMapComp insectMemoryComp = __instance.Corpse.Map.GetComponent<InsectMemoryMapComp>();
+                    insectMemoryComp.CheckAndUpdateLordDuties(__instance);
+                }
             }
         }
 
-        // The specific transition pattern:
-        // - Exactly 1 PawnHarmed trigger (with instigator faction requirement)
-        // - Exactly 1 PawnLostViolently trigger  
-        // - Exactly 4 Memo triggers
-        // - Has TransitionAction_EndAllJobs post action
-        return pawnHarmedCount == 1 &&
-               pawnLostViolentlyCount == 1 &&
-               memoCount == 4 &&
-               hasPawnHarmedWithInstigatorFaction &&
-               hasEndAllJobsAction;
+        [HarmonyPatch(typeof(Pawn), "Notify_Downed")]
+        public static class Patch_PawnNotifyDowned
+        {
+            public static void Postfix(Pawn __instance)
+            {
+                if (__instance.Map != null)
+                {
+                    // Instantly clean up this aggressor and check lord duties
+                    InsectMemoryMapComp insectMemoryComp = __instance.Map.GetComponent<InsectMemoryMapComp>();
+                    insectMemoryComp.CheckAndUpdateLordDuties(__instance);
+                }
+            }
+        }
     }
 }
