@@ -1,10 +1,106 @@
 ﻿using HarmonyLib;
 using Verse;
+using RimWorld;
+using Verse.AI;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SK_Bug_Off
 {
     public class HarmonyPatches
     {
+        // Static flag to track when insects are selecting targets through JobGiver_AIGotoNearestHostile
+        private static bool isInsectSelectingTargets = false;
+
+        [HarmonyPatch(typeof(JobGiver_AIGotoNearestHostile), "TryGiveJob")]
+        public static class Patch_JobGiver_AIGotoNearestHostile_TryGiveJob
+        {
+            public static void Prefix(Pawn pawn)
+            {
+                // Set flag if this is an insect selecting targets
+                if (Utils.IsInsect(pawn))
+                {
+                    isInsectSelectingTargets = true;
+                }
+            }
+
+            public static void Postfix(Pawn pawn)
+            {
+                // Always clear the flag when done, regardless of pawn type
+                isInsectSelectingTargets = false;
+            }
+        }
+
+        [HarmonyPatch(typeof(AttackTargetsCache), "GetPotentialTargetsFor")]
+        public static class Patch_AttackTargetsCache_GetPotentialTargetsFor
+        {
+            public static void Postfix(IAttackTargetSearcher th, ref List<IAttackTarget> __result)
+            {
+                // Only filter if we're in insect target selection mode
+                if (!isInsectSelectingTargets || __result == null || __result.Count == 0)
+                    return;
+
+                // Only apply to insects
+                if (!(th.Thing is Pawn insectPawn) || !Utils.IsInsect(insectPawn))
+                    return;
+
+                // Get the insect's memory component
+                InsectMemoryMapComp memoryComp = insectPawn.Map?.GetComponent<InsectMemoryMapComp>();
+
+                // Filter the targets
+                var filteredTargets = new List<IAttackTarget>();
+
+                foreach (var target in __result)
+                {
+                    if (ShouldIncludeTarget(insectPawn, target, memoryComp))
+                    {
+                        filteredTargets.Add(target);
+                    }
+                }
+
+                __result = filteredTargets;
+            }
+
+            private static bool ShouldIncludeTarget(Pawn insect, IAttackTarget target, InsectMemoryMapComp memoryComp)
+            {
+                Thing targetThing = target.Thing;
+
+                // Always include aggressors
+                if (IsOriginalAggressor(memoryComp, insect, targetThing))
+                {
+                    return true;
+                }
+
+                // For non-aggressors, apply distance filtering
+                float distance = (insect.Position - targetThing.Position).LengthHorizontal;
+
+                if (distance <= 10f)
+                {
+                    return true;
+                }
+
+                // Block distant non-aggressors
+                return false;
+            }
+
+            private static bool IsOriginalAggressor(InsectMemoryMapComp memoryComp, Pawn insect, Thing target)
+            {
+                var aggressors = memoryComp.GetOriginalAggressors(insect);
+
+                foreach (var aggressor in aggressors)
+                {
+                    if (aggressor.IsDefeated(insect.Map) || memoryComp.ShouldForgetAggressor(aggressor))
+                        continue;
+
+                    if ((aggressor.Pawn != null && target == aggressor.Pawn) ||
+                        (aggressor.Faction != null && target.Faction == aggressor.Faction))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
 
         [HarmonyPatch(typeof(Thing), "TakeDamage")]
         public static class Patch_TakeDamage
