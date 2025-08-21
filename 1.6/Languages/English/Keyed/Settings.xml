@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  
+  <!-- Settings Window -->
+  <SKBugOff.Settings.Title>SK Bug Off Settings</SKBugOff.Settings.Title>
+  
+  <!-- Main Feature Toggle -->
+  <SKBugOff.Settings.EnableAllInsectsAssault>Enable 'All Insects Assault' Behavior</SKBugOff.Settings.EnableAllInsectsAssault>
+  <SKBugOff.Settings.EnableAllInsectsAssault.Tooltip>When enabled, attacking any insect will cause ALL insects on the map to switch to assault colony mode.</SKBugOff.Settings.EnableAllInsectsAssault.Tooltip>
+  
+  <!-- Advanced Settings Section -->
+  <SKBugOff.Settings.AdvancedSection>Advanced Settings:</SKBugOff.Settings.AdvancedSection>
+  
+  <!-- Aggressor Memory Duration -->
+  <SKBugOff.Settings.ForgetAggressorTime>Forget aggressor after (minutes):</SKBugOff.Settings.ForgetAggressorTime>
+  <SKBugOff.Settings.ForgetAggressorTime.Description>How long insects remember their aggressors. After this time, they may return to normal behavior if no other threats remain.</SKBugOff.Settings.ForgetAggressorTime.Description>
+  
+  <!-- Cleanup Interval -->
+  <SKBugOff.Settings.CleanupInterval>Cleanup check interval (seconds):</SKBugOff.Settings.CleanupInterval>
+  <SKBugOff.Settings.CleanupInterval.Description>How often the mod checks for defeated aggressors to clean up. Lower values = more responsive but slightly more performance impact.</SKBugOff.Settings.CleanupInterval.Description>
+  
+  <!-- Disabled State Message -->
+  <SKBugOff.Settings.DisabledMessage>When disabled, insects will only respond individually to attacks instead of coordinating a colony-wide response.</SKBugOff.Settings.DisabledMessage>
+  
+  <!-- Reset Button -->
+  <SKBugOff.Settings.ResetToDefaults>Reset to Defaults</SKBugOff.Settings.ResetToDefaults>
+  
+</LanguageData>

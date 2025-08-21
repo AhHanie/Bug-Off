@@ -10,8 +10,8 @@ namespace SK_Bug_Off
     public class InsectMemoryMapComp : MapComponent
     {
         private Dictionary<Pawn, List<InsectAggressor>> originalAggressors = new Dictionary<Pawn, List<InsectAggressor>>();
-        private const int CLEANUP_INTERVAL = 3600; // 1 minute in ticks
-        private const int FORGET_AGGRESSOR_TICKS = 10800; // 2 minutes in ticks
+        private int CLEANUP_INTERVAL = Settings.CleanupIntervalTicks;
+        private int FORGET_AGGRESSOR_TICKS = Settings.ForgetAggressorTicks;
 
         public InsectMemoryMapComp(Map map)
             : base(map)

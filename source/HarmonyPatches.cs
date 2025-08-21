@@ -29,8 +29,10 @@ namespace SK_Bug_Off
                             insectMemoryComp.AddOriginalAggressor(pawn, new InsectAggressor(attacker.Faction));
                         }
 
-                        // NEW: Set all insects on the map to assault colony
-                        insectMemoryComp.SetAllInsectsToAssaultColony();
+                        if (Settings.enableAllInsectsAssault)
+                        {
+                            insectMemoryComp.SetAllInsectsToAssaultColony();
+                        }
                     }
                 }
             }

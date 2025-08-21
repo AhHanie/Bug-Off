@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using UnityEngine;
 using Verse;
 
 namespace SK_Bug_Off
@@ -14,8 +15,20 @@ namespace SK_Bug_Off
             LongEventHandler.QueueLongEvent(Init, "Sk.Bug_Off.Init", doAsynchronously: true, null);
         }
 
-        public static void Init()
+        public override string SettingsCategory()
         {
+            return "Bug Off";
+        }
+
+        public override void DoSettingsWindowContents(Rect rect)
+        {
+            ModSettingsWindow.Draw(rect);
+            base.DoSettingsWindowContents(rect);
+        }
+
+        public void Init()
+        {
+            GetSettings<Settings>();
             instance.PatchAll();
         }
     }
