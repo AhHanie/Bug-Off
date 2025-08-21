@@ -28,6 +28,9 @@ namespace SK_Bug_Off
                         {
                             insectMemoryComp.AddOriginalAggressor(pawn, new InsectAggressor(attacker.Faction));
                         }
+
+                        // NEW: Set all insects on the map to assault colony
+                        insectMemoryComp.SetAllInsectsToAssaultColony();
                     }
                 }
             }
@@ -44,7 +47,6 @@ namespace SK_Bug_Off
                     return;
                 }
                 InsectMemoryMapComp insectMemoryComp = map.GetComponent<InsectMemoryMapComp>();
-
                 if (Utils.IsInsect(__instance))
                 {
                     // Clean up the insect itself

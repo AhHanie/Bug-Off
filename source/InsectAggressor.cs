@@ -57,7 +57,7 @@ namespace SK_Bug_Off
             // More specific check for whether this aggressor is defeated
             if (pawn != null)
             {
-                return pawn.DestroyedOrNull() || pawn.Dead || pawn.Downed;
+                return pawn.DestroyedOrNull() || pawn.DeadOrDowned;
             }
 
             // For factions, check if all members of the faction on the map are defeated
@@ -71,12 +71,15 @@ namespace SK_Bug_Off
         private bool HasAliveFactionMembersOnMap(Map map)
         {
             if (faction == null || map == null)
+            {
                 return false;
+            }
+                
 
             // Check all pawns on the map
-            foreach (Pawn mapPawn in map.mapPawns.AllPawnsSpawned)
+            foreach (Pawn mapPawn in map.mapPawns.PawnsInFaction(faction))
             {
-                if (mapPawn.Faction == faction && !mapPawn.Dead && !mapPawn.Downed && !mapPawn.DestroyedOrNull())
+                if (mapPawn.Faction == faction && !mapPawn.DestroyedOrNull() && !mapPawn.DeadOrDowned)
                 {
                     return true;
                 }

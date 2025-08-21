@@ -11,7 +11,7 @@ namespace SK_Bug_Off
     {
         private Dictionary<Pawn, List<InsectAggressor>> originalAggressors = new Dictionary<Pawn, List<InsectAggressor>>();
         private const int CLEANUP_INTERVAL = 3600; // 1 minute in ticks
-        private const int FORGET_AGGRESSOR_TICKS = 7200; // 2 minutes in ticks
+        private const int FORGET_AGGRESSOR_TICKS = 10800; // 2 minutes in ticks
 
         public InsectMemoryMapComp(Map map)
             : base(map)
@@ -99,10 +99,45 @@ namespace SK_Bug_Off
         {
             // First check if it's defeated (includes faction check)
             if (aggressor.IsDefeated(map))
+            {
                 return true;
-
+            }
+                
             // Then check time-based forgetting
             return Find.TickManager.TicksGame - aggressor.EngagementStartTick > FORGET_AGGRESSOR_TICKS;
+        }
+
+        // NEW METHOD: Set all insects on the map to assault colony
+        public void SetAllInsectsToAssaultColony()
+        {
+            // Get all insect lords on this map
+            var insectLords = map.lordManager.lords.Where(lord =>
+                lord.ownedPawns.Any(pawn => Utils.IsInsect(pawn))).ToList();
+
+            foreach (var lord in insectLords)
+            {
+                UpdateLordToAssaultColony(lord);
+            }
+        }
+
+        // NEW METHOD: Update a specific lord to assault colony
+        private void UpdateLordToAssaultColony(Lord lord)
+        {
+            if (lord?.ownedPawns == null)
+                return;
+
+            // Update all insect duties to AssaultColony
+            foreach (var insect in lord.ownedPawns.Where(Utils.IsInsect))
+            {
+                if (insect.mindState != null)
+                {
+                    var duty = new PawnDuty(DutyDefOf.AssaultColony);
+                    if (duty != null)
+                    {
+                        insect.mindState.duty = duty;
+                    }
+                }
+            }
         }
 
         public void CheckAndUpdateLordDuties(Pawn potentialAggressor)
