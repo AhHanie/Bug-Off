@@ -11,6 +11,14 @@
   <!-- Advanced Settings Section -->
   <SKBugOff.Settings.AdvancedSection>Advanced Settings:</SKBugOff.Settings.AdvancedSection>
   
+  <!-- Aggro Radius -->
+  <SKBugOff.Settings.AggroRadius>Aggro radius (tiles):</SKBugOff.Settings.AggroRadius>
+  <SKBugOff.Settings.AggroRadius.Description>Distance within which insects will automatically target enemies, even without being marked as original aggressors.</SKBugOff.Settings.AggroRadius.Description>
+  
+  <!-- Assault Radius -->
+  <SKBugOff.Settings.AssaultRadius>Assault activation radius (tiles):</SKBugOff.Settings.AssaultRadius>
+  <SKBugOff.Settings.AssaultRadius.Description>When 'All Insects Assault' is enabled, only insects within this distance of an attacked insect will switch to assault mode.</SKBugOff.Settings.AssaultRadius.Description>
+  
   <!-- Aggressor Memory Duration -->
   <SKBugOff.Settings.ForgetAggressorTime>Forget aggressor after (minutes):</SKBugOff.Settings.ForgetAggressorTime>
   <SKBugOff.Settings.ForgetAggressorTime.Description>How long insects remember their aggressors. After this time, they may return to normal behavior if no other threats remain.</SKBugOff.Settings.ForgetAggressorTime.Description>

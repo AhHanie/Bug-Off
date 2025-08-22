@@ -29,6 +29,40 @@ namespace SK_Bug_Off
             listingStandard.Label("SKBugOff.Settings.AdvancedSection".Translate());
             listingStandard.Gap(12f);
 
+            // Aggro radius setting
+            Rect aggroRect = listingStandard.GetRect(30f);
+            Rect aggroLabelRect = new Rect(aggroRect.x, aggroRect.y, aggroRect.width * 0.6f, aggroRect.height);
+            Rect aggroSliderRect = new Rect(aggroRect.x + aggroRect.width * 0.65f, aggroRect.y, aggroRect.width * 0.25f, aggroRect.height);
+            Rect aggroValueRect = new Rect(aggroRect.x + aggroRect.width * 0.92f, aggroRect.y, aggroRect.width * 0.08f, aggroRect.height);
+
+            Widgets.Label(aggroLabelRect, "SKBugOff.Settings.AggroRadius".Translate());
+            float aggroValue = Settings.aggroRadius;
+            aggroValue = Widgets.HorizontalSlider(aggroSliderRect, aggroValue, 1f, 30f, true);
+            Settings.aggroRadius = aggroValue;
+            Widgets.Label(aggroValueRect, Settings.aggroRadius.ToString("F1"));
+
+            listingStandard.Gap(6f);
+            listingStandard.Label("SKBugOff.Settings.AggroRadius.Description".Translate());
+
+            listingStandard.Gap();
+
+            // Assault radius setting
+            Rect assaultRect = listingStandard.GetRect(30f);
+            Rect assaultLabelRect = new Rect(assaultRect.x, assaultRect.y, assaultRect.width * 0.6f, assaultRect.height);
+            Rect assaultSliderRect = new Rect(assaultRect.x + assaultRect.width * 0.65f, assaultRect.y, assaultRect.width * 0.25f, assaultRect.height);
+            Rect assaultValueRect = new Rect(assaultRect.x + assaultRect.width * 0.92f, assaultRect.y, assaultRect.width * 0.08f, assaultRect.height);
+
+            Widgets.Label(assaultLabelRect, "SKBugOff.Settings.AssaultRadius".Translate());
+            float assaultValue = Settings.assaultRadius;
+            assaultValue = Widgets.HorizontalSlider(assaultSliderRect, assaultValue, 5f, 50f, true);
+            Settings.assaultRadius = assaultValue;
+            Widgets.Label(assaultValueRect, Settings.assaultRadius.ToString("F1"));
+
+            listingStandard.Gap(6f);
+            listingStandard.Label("SKBugOff.Settings.AssaultRadius.Description".Translate());
+
+            listingStandard.Gap();
+
             // Forget aggressor time setting
             Rect forgetTimeRect = listingStandard.GetRect(30f);
             Rect forgetTimeLabelRect = new Rect(forgetTimeRect.x, forgetTimeRect.y, forgetTimeRect.width * 0.6f, forgetTimeRect.height);
@@ -69,6 +103,8 @@ namespace SK_Bug_Off
                 Settings.enableAllInsectsAssault = false;
                 Settings.forgetAggressorMinutes = 2;
                 Settings.cleanupIntervalSeconds = 60;
+                Settings.aggroRadius = 10f;
+                Settings.assaultRadius = 15f;
             }
 
             listingStandard.End();

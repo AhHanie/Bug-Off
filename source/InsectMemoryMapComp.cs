@@ -71,25 +71,30 @@ namespace SK_Bug_Off
             return Find.TickManager.TicksGame - aggressor.EngagementStartTick > FORGET_AGGRESSOR_TICKS;
         }
 
-        public void SetAllInsectsToAssaultColony()
+        public void SetInsectsToAssaultColonyInRadius(IntVec3 centerPosition)
         {
+            var allInsects = map.mapPawns.AllPawnsSpawned.Where(p => Utils.IsInsect(p));
+
+            var insectsInRadius = allInsects.Where(insect =>
+                (insect.Position - centerPosition).LengthHorizontal <= Settings.assaultRadius).ToList();
+
             var insectLords = map.lordManager.lords.Where(lord =>
-                lord.ownedPawns.Any(pawn => Utils.IsInsect(pawn))).ToList();
+                lord.ownedPawns.Any(pawn => insectsInRadius.Contains(pawn))).ToList();
 
             foreach (var lord in insectLords)
             {
-                UpdateLordToAssaultColony(lord);
+                UpdateLordToAssaultColony(lord, insectsInRadius);
             }
         }
 
-        private void UpdateLordToAssaultColony(Lord lord)
+        private void UpdateLordToAssaultColony(Lord lord, List<Pawn> insectsInRadius)
         {
             if (lord?.ownedPawns == null)
                 return;
 
             foreach (var insect in lord.ownedPawns.Where(Utils.IsInsect))
             {
-                if (insect.mindState != null)
+                if (insectsInRadius.Contains(insect) && insect.mindState != null)
                 {
                     var duty = new PawnDuty(DutyDefOf.AssaultColony);
                     if (duty != null)

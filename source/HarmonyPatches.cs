@@ -67,7 +67,7 @@ namespace SK_Bug_Off
 
                 float distance = (insect.Position - targetThing.Position).LengthHorizontal;
 
-                if (distance <= 10f)
+                if (distance <= Settings.aggroRadius)
                 {
                     return true;
                 }
@@ -117,7 +117,7 @@ namespace SK_Bug_Off
 
                         if (Settings.enableAllInsectsAssault)
                         {
-                            insectMemoryComp.SetAllInsectsToAssaultColony();
+                            insectMemoryComp.SetInsectsToAssaultColonyInRadius(pawn.Position);
                         }
                     }
                 }
