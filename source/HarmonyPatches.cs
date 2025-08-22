@@ -1,15 +1,16 @@
 ﻿using HarmonyLib;
-using Verse;
 using RimWorld;
-using Verse.AI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using Verse;
+using Verse.AI;
 
 namespace SK_Bug_Off
 {
     public class HarmonyPatches
     {
-        // Static flag to track when insects are selecting targets through JobGiver_AIGotoNearestHostile
         private static bool isInsectSelectingTargets = false;
 
         [HarmonyPatch(typeof(JobGiver_AIGotoNearestHostile), "TryGiveJob")]
@@ -17,7 +18,6 @@ namespace SK_Bug_Off
         {
             public static void Prefix(Pawn pawn)
             {
-                // Set flag if this is an insect selecting targets
                 if (Utils.IsInsect(pawn))
                 {
                     isInsectSelectingTargets = true;
@@ -26,7 +26,6 @@ namespace SK_Bug_Off
 
             public static void Postfix(Pawn pawn)
             {
-                // Always clear the flag when done, regardless of pawn type
                 isInsectSelectingTargets = false;
             }
         }
@@ -36,18 +35,14 @@ namespace SK_Bug_Off
         {
             public static void Postfix(IAttackTargetSearcher th, ref List<IAttackTarget> __result)
             {
-                // Only filter if we're in insect target selection mode
                 if (!isInsectSelectingTargets || __result == null || __result.Count == 0)
                     return;
 
-                // Only apply to insects
                 if (!(th.Thing is Pawn insectPawn) || !Utils.IsInsect(insectPawn))
                     return;
 
-                // Get the insect's memory component
                 InsectMemoryMapComp memoryComp = insectPawn.Map?.GetComponent<InsectMemoryMapComp>();
 
-                // Filter the targets
                 var filteredTargets = new List<IAttackTarget>();
 
                 foreach (var target in __result)
@@ -65,13 +60,11 @@ namespace SK_Bug_Off
             {
                 Thing targetThing = target.Thing;
 
-                // Always include aggressors
                 if (IsOriginalAggressor(memoryComp, insect, targetThing))
                 {
                     return true;
                 }
 
-                // For non-aggressors, apply distance filtering
                 float distance = (insect.Position - targetThing.Position).LengthHorizontal;
 
                 if (distance <= 10f)
@@ -79,7 +72,6 @@ namespace SK_Bug_Off
                     return true;
                 }
 
-                // Block distant non-aggressors
                 return false;
             }
 
@@ -116,10 +108,8 @@ namespace SK_Bug_Off
 
                     if (dinfo.Instigator is Pawn attacker)
                     {
-                        // Add the attacking pawn as an aggressor
                         insectMemoryComp.AddOriginalAggressor(pawn, new InsectAggressor(attacker));
 
-                        // Also add their faction if they have one (for faction-wide hostility)
                         if (attacker.Faction != null)
                         {
                             insectMemoryComp.AddOriginalAggressor(pawn, new InsectAggressor(attacker.Faction));
@@ -147,42 +137,48 @@ namespace SK_Bug_Off
                 InsectMemoryMapComp insectMemoryComp = map.GetComponent<InsectMemoryMapComp>();
                 if (Utils.IsInsect(__instance))
                 {
-                    // Clean up the insect itself
                     insectMemoryComp.CleanupInsect(__instance);
                 }
-                else
-                {
-                    // Instantly clean up this aggressor and check lord duties
-                    insectMemoryComp.CheckAndUpdateLordDuties(__instance);
-                }
             }
         }
 
-        [HarmonyPatch(typeof(Pawn), "Kill")]
-        public static class Patch_PawnKill
+        [HarmonyPatch(typeof(TrashUtility), "ShouldTrashBuilding", new Type[] { typeof(Pawn), typeof(Building), typeof(bool) })]
+        public static class Patch_TrashUtility_ShouldTrashBuilding
         {
-            public static void Postfix(Pawn __instance)
+            public static void Postfix(Pawn pawn, Building b, bool attackAllInert, ref bool __result)
             {
-                if (__instance.Corpse?.Map != null)
+                if (!Utils.IsInsect(pawn) || !__result)
+                    return;
+
+                InsectMemoryMapComp memoryComp = pawn.Map?.GetComponent<InsectMemoryMapComp>();
+
+                if (!IsPlayerFactionAggressorToAnyInsect(memoryComp, pawn.Map))
                 {
-                    // Instantly clean up this aggressor and check lord duties
-                    InsectMemoryMapComp insectMemoryComp = __instance.Corpse.Map.GetComponent<InsectMemoryMapComp>();
-                    insectMemoryComp.CheckAndUpdateLordDuties(__instance);
+                    __result = false;
                 }
             }
-        }
 
-        [HarmonyPatch(typeof(Pawn), "Notify_Downed")]
-        public static class Patch_PawnNotifyDowned
-        {
-            public static void Postfix(Pawn __instance)
+            private static bool IsPlayerFactionAggressorToAnyInsect(InsectMemoryMapComp memoryComp, Map map)
             {
-                if (__instance.Map != null)
+                var allInsects = map.mapPawns.AllPawnsSpawned.Where(p => Utils.IsInsect(p));
+
+                foreach (var insect in allInsects)
                 {
-                    // Instantly clean up this aggressor and check lord duties
-                    InsectMemoryMapComp insectMemoryComp = __instance.Map.GetComponent<InsectMemoryMapComp>();
-                    insectMemoryComp.CheckAndUpdateLordDuties(__instance);
+                    var aggressors = memoryComp.GetOriginalAggressors(insect);
+
+                    foreach (var aggressor in aggressors)
+                    {
+                        if (aggressor.IsDefeated(map) || memoryComp.ShouldForgetAggressor(aggressor))
+                            continue;
+
+                        if ((aggressor.Pawn != null && aggressor.Pawn.Faction == Faction.OfPlayer) ||
+                            (aggressor.Faction != null && aggressor.Faction == Faction.OfPlayer))
+                        {
+                            return true;
+                        }
+                    }
                 }
+                return false;
             }
         }
     }
