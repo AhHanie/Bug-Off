@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
-  
-  <!-- Settings Window -->
-  <SKBugOff.Settings.Title>SK Bug Off Settings</SKBugOff.Settings.Title>
-  
   <!-- Main Feature Toggle -->
   <SKBugOff.Settings.EnableAllInsectsAssault>Enable 'All Insects Assault' Behavior</SKBugOff.Settings.EnableAllInsectsAssault>
   <SKBugOff.Settings.EnableAllInsectsAssault.Tooltip>When enabled, attacking any insect will cause ALL insects on the map to switch to assault colony mode.</SKBugOff.Settings.EnableAllInsectsAssault.Tooltip>
+  
+  <!-- Death Reinforcement Settings -->
+  <SKBugOff.Settings.EnableDeathReinforcements>Death Reinforcements</SKBugOff.Settings.EnableDeathReinforcements>
+  <SKBugOff.Settings.EnableDeathReinforcements.Tooltip>When enabled, insect deaths may trigger reinforcements from nearby hives</SKBugOff.Settings.EnableDeathReinforcements.Tooltip>
+  <SKBugOff.Settings.DeathReinforcementSettings>Death Reinforcement Settings</SKBugOff.Settings.DeathReinforcementSettings>
+  
+  <SKBugOff.Settings.DeathScanRadius>Death Scan Radius</SKBugOff.Settings.DeathScanRadius>
+  <SKBugOff.Settings.DeathScanRadius.Description>Radius to scan for remaining combatants around dead insects</SKBugOff.Settings.DeathScanRadius.Description>
+  
+  <SKBugOff.Settings.CombatantThreshold>Combatant Threshold {0}</SKBugOff.Settings.CombatantThreshold>
+  <SKBugOff.Settings.CombatantThreshold.Description>Random range for minimum combatants needed to allow reinforcements</SKBugOff.Settings.CombatantThreshold.Description>
+  
+  <SKBugOff.Settings.HiveReinforcementRadius>Hive Reinforcement Radius</SKBugOff.Settings.HiveReinforcementRadius>
+  <SKBugOff.Settings.HiveReinforcementRadius.Description>Radius to scan around hives for potential reinforcements</SKBugOff.Settings.HiveReinforcementRadius.Description>
+  
+  <SKBugOff.Settings.ReinforcementCount>Reinforcement Count {0}</SKBugOff.Settings.ReinforcementCount>
+  <SKBugOff.Settings.ReinforcementCount.Description>Random range for number of reinforcements to call</SKBugOff.Settings.ReinforcementCount.Description>
   
   <!-- Advanced Settings Section -->
   <SKBugOff.Settings.AdvancedSection>Advanced Settings:</SKBugOff.Settings.AdvancedSection>
@@ -32,5 +45,4 @@
   
   <!-- Reset Button -->
   <SKBugOff.Settings.ResetToDefaults>Reset to Defaults</SKBugOff.Settings.ResetToDefaults>
-  
 </LanguageData>

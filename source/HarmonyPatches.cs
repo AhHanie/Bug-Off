@@ -3,7 +3,6 @@ using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Verse;
 using Verse.AI;
 
@@ -41,7 +40,12 @@ namespace SK_Bug_Off
                 if (!(th.Thing is Pawn insectPawn) || !Utils.IsInsect(insectPawn))
                     return;
 
-                InsectMemoryMapComp memoryComp = insectPawn.Map?.GetComponent<InsectMemoryMapComp>();
+                InsectMemoryMapComp memoryComp = insectPawn.Map.GetComponent<InsectMemoryMapComp>();
+
+                if (memoryComp.AllHivesDestroyed)
+                {
+                    return;
+                }
 
                 var filteredTargets = new List<IAttackTarget>();
 
@@ -142,6 +146,29 @@ namespace SK_Bug_Off
             }
         }
 
+        [HarmonyPatch(typeof(Pawn), "Kill")]
+        public static class Patch_Kill
+        {
+            public static void Postfix(DamageInfo? dinfo, Pawn __instance)
+            {
+                if (dinfo == null || !Utils.IsInsect(__instance))
+                {
+                    return;
+                }
+
+                if (dinfo.Value.Instigator == null)
+                {
+                    return;
+                }
+
+                if (__instance.Corpse.Map != null)
+                {
+                    InsectMemoryMapComp insectMemoryComp = __instance.Corpse.Map.GetComponent<InsectMemoryMapComp>();
+                    insectMemoryComp.HandleInsectDeath(__instance);
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(TrashUtility), "ShouldTrashBuilding", new Type[] { typeof(Pawn), typeof(Building), typeof(bool) })]
         public static class Patch_TrashUtility_ShouldTrashBuilding
         {
@@ -151,6 +178,11 @@ namespace SK_Bug_Off
                     return;
 
                 InsectMemoryMapComp memoryComp = pawn.Map?.GetComponent<InsectMemoryMapComp>();
+
+                if (memoryComp.AllHivesDestroyed)
+                {
+                    return;
+                }
 
                 if (!IsPlayerFactionAggressorToAnyInsect(memoryComp, pawn.Map))
                 {
